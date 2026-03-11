@@ -269,34 +269,40 @@ def register():
 
 @app.route("/login", methods=["POST"])
 def login():
-    data = request.get_json()
+    try:
+        data = request.get_json(force=True)
+        if not data:
+            return jsonify({"error": "Invalid JSON"}), 400
 
-    student_id = str(data.get("student_id", "")).strip()
-    password = str(data.get("password", "")).strip()
+        student_id = str(data.get("student_id", "")).strip()
+        password = str(data.get("password", "")).strip()
 
-    users = load_users()
-    user_df = users[
-        (users["student_id"] == student_id) &
-        (users["password"] == password)
-    ]
+        users = load_users()
+        user_df = users[
+            (users["student_id"] == student_id) &
+            (users["password"] == password)
+        ]
 
-    if user_df.empty:
-        return jsonify({"error": "Invalid student ID or password"}), 401
+        if user_df.empty:
+            return jsonify({"error": "Invalid student ID or password"}), 401
 
-    user = user_df.iloc[0].to_dict()
-    token = secrets.token_hex(16)
-    TOKENS[token] = user["student_id"]
+        user = user_df.iloc[0].to_dict()
+        token = secrets.token_hex(16)
+        TOKENS[token] = user["student_id"]
 
-    return jsonify({
-        "message": "Login successful",
-        "token": token,
-        "user": {
-            "student_id": user["student_id"],
-            "name": user["name"],
-            "section": user["section"],
-            "role": user["role"]
-        }
-    })
+        return jsonify({
+            "message": "Login successful",
+            "token": token,
+            "user": {
+                "student_id": user["student_id"],
+                "name": user["name"],
+                "section": user["section"],
+                "role": user["role"]
+            }
+        })
+    except Exception as e:
+        import traceback
+        return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
 
 
 @app.route("/me")
