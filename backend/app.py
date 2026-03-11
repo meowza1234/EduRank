@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, jsonify, request, send_file, send_from_directory
 from analytics import (
     get_student_dashboard,
     get_student_courses,
@@ -211,9 +211,14 @@ def build_admin_dashboard_payload(section_filter):
     }
 
 
-@app.route("/")
-def home():
-    return jsonify({"message": "EduRank Analytics API is running"})
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve_react(path):
+    dist_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dist")
+    file_path = os.path.join(dist_dir, path)
+    if path and os.path.exists(file_path):
+        return send_from_directory(dist_dir, path)
+    return send_from_directory(dist_dir, "index.html")
 
 
 @app.route("/health")
