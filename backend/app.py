@@ -1,5 +1,4 @@
 from flask import Flask, jsonify, request, send_file
-from flask_cors import CORS
 from analytics import (
     get_student_dashboard,
     get_student_courses,
@@ -13,7 +12,34 @@ import pandas as pd
 import secrets
 
 app = Flask(__name__)
-CORS(app, origins=["https://edu-rankk.vercel.app", "http://localhost:5173", "http://127.0.0.1:5173"])
+
+ALLOWED_ORIGINS = [
+    "https://edu-rankk.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+@app.after_request
+def add_cors_headers(response):
+    origin = request.headers.get("Origin", "")
+    if origin in ALLOWED_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = origin
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return response
+
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        from flask import make_response
+        response = make_response()
+        origin = request.headers.get("Origin", "")
+        if origin in ALLOWED_ORIGINS:
+            response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        response.status_code = 204
+        return response
 
 TOKENS = {}
 ADMIN_ROLES = {"admin", "instructor"}
