@@ -4,7 +4,7 @@ import pandas as pd
 
 def get_data_paths():
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    data_dir = os.path.join(base_dir, "..", "data")
+    data_dir = os.path.join(base_dir, "data")
 
     return {
         "students": os.path.join(data_dir, "students.csv"),

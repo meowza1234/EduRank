@@ -1,0 +1,12 @@
+student_id,name,password,section,role
+S001,Anan,1234,SEC-A,student
+S002,Benjamas,1234,SEC-A,student
+S003,Chaiwat,BC-1,SEC-B,student
+S004,Duangkamol,1234,SEC-A,student
+S005,Ekkarat,1234,SEC-B,student
+A001,Teacher,1234,SEC-A,admin
+T001,อาจารย์ผู้สอน,teacher123,SEC-A,instructor
+673380553-3,พลวรรธน์ ลีบุญพงศ์,Idea5,SEC-A,student
+673380556-7,พิมพ์มาดา เวชวงศ์,1234,SEC-A,student
+
+ุึ673380556-7,พิมพ์มา เวชวงศ์,1234,TBD,student

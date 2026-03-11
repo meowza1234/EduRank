@@ -36,7 +36,7 @@ ADMIN_ROLES = {"admin", "instructor"}
 
 def load_users():
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    users_path = os.path.join(base_dir, "..", "data", "users.csv")
+    users_path = os.path.join(base_dir, "data", "users.csv")
     df = pd.read_csv(users_path, dtype=str)
     df["student_id"] = df["student_id"].str.strip()
     df["password"] = df["password"].str.strip()
@@ -241,7 +241,7 @@ def register():
         return jsonify({"error": "รหัสนักศึกษานี้ถูกลงทะเบียนแล้ว"}), 409
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    users_path = os.path.join(base_dir, "..", "data", "users.csv")
+    users_path = os.path.join(base_dir, "data", "users.csv")
 
     # อ่านไฟล์เพื่อเช็คว่าบรรทัดสุดท้ายลงท้ายด้วย newline หรือไม่
     with open(users_path, "rb") as f:
