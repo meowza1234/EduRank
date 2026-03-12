@@ -8,7 +8,9 @@ import os
 
 
 def _register_thai_fonts():
+    _here = os.path.dirname(os.path.abspath(__file__))
     font_dirs = [
+        os.path.join(_here, "fonts"),
         "C:/Windows/Fonts",
         "/usr/share/fonts/truetype/thai-tlwg",
         "/usr/share/fonts/truetype",
