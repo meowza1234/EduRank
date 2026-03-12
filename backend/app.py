@@ -219,6 +219,17 @@ def health():
     return jsonify({"status": "ok"})
 
 
+@app.route("/setup-db")
+def setup_db():
+    """Manually trigger DB init — call this once if tables are missing."""
+    try:
+        _db.init_db()
+        return jsonify({"status": "ok", "message": "Database initialized successfully"})
+    except Exception as e:
+        import traceback
+        return jsonify({"status": "error", "message": str(e), "trace": traceback.format_exc()}), 500
+
+
 @app.route("/register", methods=["POST"])
 def register():
     data = request.get_json()

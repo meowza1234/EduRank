@@ -1,5 +1,10 @@
 import db as _db
-_db.init_db()
+try:
+    _db.init_db()
+except Exception as _e:
+    import traceback
+    print(f"[db] init_db() FAILED: {_e}")
+    traceback.print_exc()
 
 from app import app
 
