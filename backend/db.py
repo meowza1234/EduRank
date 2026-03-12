@@ -7,17 +7,28 @@ import pandas as pd
 
 def get_db_url():
     url = os.environ.get("DATABASE_URL", "")
-    # Railway uses postgres:// but psycopg2 needs postgresql://
+    # Railway uses postgres:// but SQLAlchemy needs postgresql://
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql://", 1)
     return url
 
 
+def get_engine():
+    """Return a SQLAlchemy engine (used for pd.read_sql)."""
+    url = get_db_url()
+    if not url:
+        return None
+    from sqlalchemy import create_engine
+    return create_engine(url)
+
+
 def get_connection():
+    """Return a raw psycopg2 connection (used for DDL/DML)."""
     url = get_db_url()
     if not url:
         return None
     import psycopg2
+    # psycopg2 needs postgresql:// already handled in get_db_url
     return psycopg2.connect(url)
 
 
@@ -160,10 +171,10 @@ def _seed_from_csv(conn):
 
 def load_users_df():
     """Return users table as a pandas DataFrame (DB or CSV fallback)."""
-    conn = get_connection()
-    if conn:
-        df = pd.read_sql("SELECT student_id, name, password, section, role FROM users", conn)
-        conn.close()
+    engine = get_engine()
+    if engine:
+        with engine.connect() as conn:
+            df = pd.read_sql("SELECT student_id, name, password, section, role FROM users", conn)
         df["student_id"] = df["student_id"].str.strip()
         df["password"] = df["password"].str.strip()
         df["role"] = df["role"].fillna("").str.strip().str.lower()
@@ -185,15 +196,15 @@ def load_users_df():
 
 def load_core_data_from_db():
     """Return (students_df, courses_df, enrollments_df) from DB, or (None,None,None) if no DB."""
-    conn = get_connection()
-    if not conn:
+    engine = get_engine()
+    if not engine:
         return None, None, None
-    students = pd.read_sql("SELECT student_id, name, section FROM students", conn)
-    courses = pd.read_sql("SELECT course_code, course_name, credits, category FROM courses", conn)
-    enrollments = pd.read_sql(
-        "SELECT student_id, semester, course_code, grade_letter, grade_point FROM enrollments", conn
-    )
-    conn.close()
+    with engine.connect() as conn:
+        students = pd.read_sql("SELECT student_id, name, section FROM students", conn)
+        courses = pd.read_sql("SELECT course_code, course_name, credits, category FROM courses", conn)
+        enrollments = pd.read_sql(
+            "SELECT student_id, semester, course_code, grade_letter, grade_point FROM enrollments", conn
+        )
     return students, courses, enrollments
 
 
@@ -243,10 +254,10 @@ def upsert_enrollment(student_id, semester, course_code, grade_letter, grade_poi
 
 def get_courses_list():
     """Return list of course dicts. DB or CSV fallback."""
-    conn = get_connection()
-    if conn:
-        df = pd.read_sql("SELECT course_code, course_name, credits::text, category FROM courses", conn)
-        conn.close()
+    engine = get_engine()
+    if engine:
+        with engine.connect() as conn:
+            df = pd.read_sql("SELECT course_code, course_name, CAST(credits AS TEXT) AS credits, category FROM courses", conn)
         return df.fillna("").to_dict(orient="records")
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -257,10 +268,10 @@ def get_courses_list():
 
 def get_students_list():
     """Return list of student dicts. DB or CSV fallback."""
-    conn = get_connection()
-    if conn:
-        df = pd.read_sql("SELECT student_id, name, section FROM students ORDER BY student_id", conn)
-        conn.close()
+    engine = get_engine()
+    if engine:
+        with engine.connect() as conn:
+            df = pd.read_sql("SELECT student_id, name, section FROM students ORDER BY student_id", conn)
         return df.fillna("").to_dict(orient="records")
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
