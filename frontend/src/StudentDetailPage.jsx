@@ -18,6 +18,8 @@ function StudentDetailPage() {
   const [student, setStudent] = useState(null);
   const [error, setError] = useState("");
   const token = localStorage.getItem("token");
+  const localUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const isAdminUser = ["admin", "instructor"].includes(String(localUser.role || "").toLowerCase());
 
   useEffect(() => {
     const loadStudent = async () => {
@@ -289,39 +291,41 @@ function StudentDetailPage() {
         </Card>
       </div>
 
-      <div style={contentGridStyle}>
-        <Card title="AI Study Strategy">
-          {smart.length === 0 ? (
-            <p style={emptyTextStyle}>No recommendations available</p>
-          ) : (
-            <ul style={listStyle}>
-              {smart.map((item, index) => (
-                <li key={index} style={listItemStyle}>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+      {!isAdminUser && (
+        <div style={contentGridStyle}>
+          <Card title="AI Study Strategy">
+            {smart.length === 0 ? (
+              <p style={emptyTextStyle}>No recommendations available</p>
+            ) : (
+              <ul style={listStyle}>
+                {smart.map((item, index) => (
+                  <li key={index} style={listItemStyle}>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
 
-        <Card title="Suggested Next Action">
-          <div style={insightBoxStyle}>
-            <p style={insightTextStyle}>
-              เริ่มจากเช็กวิชาที่มี impact สูงในหน้า Course Analyzer แล้วใช้ Grade
-              Planner จำลองแผนว่าถ้าปรับ GPA เทอมหน้าจะทำให้ GPAX ไปถึงเป้าหมายได้หรือไม่
-            </p>
+          <Card title="Suggested Next Action">
+            <div style={insightBoxStyle}>
+              <p style={insightTextStyle}>
+                เริ่มจากเช็กวิชาที่มี impact สูงในหน้า Course Analyzer แล้วใช้ Grade
+                Planner จำลองแผนว่าถ้าปรับ GPA เทอมหน้าจะทำให้ GPAX ไปถึงเป้าหมายได้หรือไม่
+              </p>
 
-            <div style={actionButtonGroupStyle}>
-              <Link to="/my-courses" style={primaryButtonStyle}>
-                Open Course Analyzer
-              </Link>
-              <Link to="/planner" style={secondaryButtonStyle}>
-                Open Grade Planner
-              </Link>
+              <div style={actionButtonGroupStyle}>
+                <Link to="/my-courses" style={primaryButtonStyle}>
+                  Open Course Analyzer
+                </Link>
+                <Link to="/planner" style={secondaryButtonStyle}>
+                  Open Grade Planner
+                </Link>
+              </div>
             </div>
-          </div>
-        </Card>
-      </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
