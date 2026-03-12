@@ -247,6 +247,7 @@ def register():
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
     users_path = os.path.join(base_dir, "data", "users.csv")
+    students_path = os.path.join(base_dir, "data", "students.csv")
 
     # อ่านไฟล์เพื่อเช็คว่าบรรทัดสุดท้ายลงท้ายด้วย newline หรือไม่
     with open(users_path, "rb") as f:
@@ -256,6 +257,17 @@ def register():
         if not ends_with_newline:
             f.write("\n")
         f.write(f"{student_id},{name},{password},{section},student\n")
+
+    # เพิ่มในไฟล์ students.csv ด้วย เพื่อให้ analytics หาเจอ
+    students_df = pd.read_csv(students_path, dtype=str)
+    if students_df[students_df["student_id"] == student_id].empty:
+        with open(students_path, "rb") as f:
+            f.seek(0, 2)
+            ends_with_newline = f.read(1) == b"\n" if f.tell() > 0 else True
+        with open(students_path, "a", encoding="utf-8", newline="") as f:
+            if not ends_with_newline:
+                f.write("\n")
+            f.write(f"{student_id},{name},{section}\n")
 
     token = secrets.token_hex(16)
     TOKENS[token] = student_id
@@ -554,6 +566,97 @@ def grade_planner():
         "difficulty_level": difficulty_level,
         "recommendations": recommendations
     })
+
+
+GRADE_MAP = {
+    "A": 4.0, "A-": 3.7,
+    "B+": 3.5, "B": 3.0, "B-": 2.7,
+    "C+": 2.3, "C": 2.0, "C-": 1.7,
+    "D+": 1.3, "D": 1.0, "F": 0.0,
+}
+
+
+@app.route("/courses")
+def list_courses():
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    if not is_admin_user(user):
+        return jsonify({"error": "Forbidden"}), 403
+
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    courses_path = os.path.join(base_dir, "data", "courses.csv")
+    df = pd.read_csv(courses_path, dtype=str).fillna("")
+    courses = df.to_dict(orient="records")
+    return jsonify({"courses": courses})
+
+
+@app.route("/students-list")
+def students_list():
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    if not is_admin_user(user):
+        return jsonify({"error": "Forbidden"}), 403
+
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    students_path = os.path.join(base_dir, "data", "students.csv")
+    df = pd.read_csv(students_path, dtype=str).fillna("")
+    students = df.to_dict(orient="records")
+    return jsonify({"students": students})
+
+
+@app.route("/grades", methods=["POST"])
+def save_grade():
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    if not is_admin_user(user):
+        return jsonify({"error": "Forbidden: admin or instructor only"}), 403
+
+    data = request.get_json()
+    student_id = str(data.get("student_id", "")).strip()
+    semester = str(data.get("semester", "")).strip()
+    course_code = str(data.get("course_code", "")).strip()
+    grade_letter = str(data.get("grade_letter", "")).strip()
+
+    if not student_id or not semester or not course_code or not grade_letter:
+        return jsonify({"error": "กรุณากรอกข้อมูลให้ครบ"}), 400
+
+    if grade_letter not in GRADE_MAP:
+        return jsonify({"error": f"เกรดไม่ถูกต้อง ต้องเป็นหนึ่งใน: {', '.join(GRADE_MAP.keys())}"}), 400
+
+    grade_point = GRADE_MAP[grade_letter]
+
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    enrollments_path = os.path.join(base_dir, "data", "enrollments.csv")
+    df = pd.read_csv(enrollments_path, dtype=str)
+    df["student_id"] = df["student_id"].str.strip()
+    df["semester"] = df["semester"].str.strip()
+    df["course_code"] = df["course_code"].str.strip()
+
+    mask = (
+        (df["student_id"] == student_id) &
+        (df["semester"] == semester) &
+        (df["course_code"] == course_code)
+    )
+
+    if mask.any():
+        # อัปเดตเกรดที่มีอยู่
+        df.loc[mask, "grade_letter"] = grade_letter
+        df.loc[mask, "grade_point"] = str(grade_point)
+        df.to_csv(enrollments_path, index=False)
+        return jsonify({"message": "อัปเดตเกรดสำเร็จ", "updated": True})
+    else:
+        # เพิ่มแถวใหม่
+        with open(enrollments_path, "rb") as f:
+            f.seek(0, 2)
+            ends_with_newline = f.read(1) == b"\n" if f.tell() > 0 else True
+        with open(enrollments_path, "a", encoding="utf-8", newline="") as f:
+            if not ends_with_newline:
+                f.write("\n")
+            f.write(f"{student_id},{semester},{course_code},{grade_letter},{grade_point}\n")
+        return jsonify({"message": "บันทึกเกรดสำเร็จ", "updated": False}), 201
 
 
 @app.route("/simulate", methods=["POST"])

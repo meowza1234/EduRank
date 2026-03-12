@@ -7,6 +7,7 @@ import ProtectedRoute from "./ProtectedRoute.jsx";
 import MyCoursesPage from "./MyCoursesPage.jsx";
 import SectionLeaderboardPage from "./SectionLeaderboardPage.jsx";
 import AdminDashboardPage from "./AdminDashboardPage.jsx";
+import GradeEntryPage from "./GradeEntryPage.jsx";
 
 function App() {
   return (
@@ -63,6 +64,15 @@ function App() {
         element={
           <ProtectedRoute>
             <AdminDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/grade-entry"
+        element={
+          <ProtectedRoute>
+            <GradeEntryPage />
           </ProtectedRoute>
         }
       />

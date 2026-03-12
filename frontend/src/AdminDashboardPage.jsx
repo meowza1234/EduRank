@@ -251,6 +251,21 @@ function AdminDashboardPage() {
           </p>
         </div>
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <Link
+            to="/grade-entry"
+            style={{
+              textDecoration: "none",
+              padding: "10px 20px",
+              border: "1px solid #2563eb",
+              borderRadius: "10px",
+              backgroundColor: "#2563eb",
+              color: "white",
+              fontWeight: "bold",
+              fontSize: "14px",
+            }}
+          >
+            กรอกเกรดนักศึกษา
+          </Link>
           <button
             onClick={() => navigate("/")}
             style={{
