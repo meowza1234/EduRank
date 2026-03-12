@@ -282,21 +282,6 @@ function AdminDashboardPage() {
             กรอกเกรดนักศึกษา
           </Link>
           <button
-            onClick={() => navigate("/")}
-            style={{
-              padding: "10px 20px",
-              border: "1px solid #cbd5e1",
-              borderRadius: "10px",
-              backgroundColor: "white",
-              color: "#334155",
-              fontWeight: "bold",
-              fontSize: "14px",
-              cursor: "pointer",
-            }}
-          >
-            ← ย้อนกลับ
-          </button>
-          <button
             onClick={() => {
               localStorage.removeItem("token");
               localStorage.removeItem("user");
