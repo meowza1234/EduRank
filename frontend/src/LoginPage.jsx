@@ -15,6 +15,7 @@ function LoginPage() {
   // Sign up state
   const [signupId, setSignupId] = useState("");
   const [signupName, setSignupName] = useState("");
+  const [signupSection, setSignupSection] = useState("SEC-A");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirm, setSignupConfirm] = useState("");
   const [signupError, setSignupError] = useState("");
@@ -69,6 +70,7 @@ function LoginPage() {
         body: JSON.stringify({
           student_id: signupId,
           name: signupName,
+          section: signupSection,
           password: signupPassword,
         }),
       });
@@ -192,6 +194,19 @@ function LoginPage() {
                 style={inputStyle}
                 required
               />
+            </div>
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Section</label>
+              <select
+                value={signupSection}
+                onChange={(e) => setSignupSection(e.target.value)}
+                style={inputStyle}
+                required
+              >
+                <option value="SEC-A">SEC-A</option>
+                <option value="SEC-B">SEC-B</option>
+                <option value="SEC-C">SEC-C</option>
+              </select>
             </div>
             <div style={fieldStyle}>
               <label style={labelStyle}>รหัสผ่าน (อย่างน้อย 4 ตัวอักษร)</label>
