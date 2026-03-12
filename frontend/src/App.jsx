@@ -8,6 +8,7 @@ import MyCoursesPage from "./MyCoursesPage.jsx";
 import SectionLeaderboardPage from "./SectionLeaderboardPage.jsx";
 import AdminDashboardPage from "./AdminDashboardPage.jsx";
 import GradeEntryPage from "./GradeEntryPage.jsx";
+import StudentListPage from "./StudentListPage.jsx";
 
 function App() {
   return (
@@ -73,6 +74,15 @@ function App() {
         element={
           <ProtectedRoute>
             <GradeEntryPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/students"
+        element={
+          <ProtectedRoute>
+            <StudentListPage />
           </ProtectedRoute>
         }
       />

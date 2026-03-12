@@ -252,6 +252,21 @@ function AdminDashboardPage() {
         </div>
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
           <Link
+            to="/students"
+            style={{
+              textDecoration: "none",
+              padding: "10px 20px",
+              border: "1px solid #0891b2",
+              borderRadius: "10px",
+              backgroundColor: "#0891b2",
+              color: "white",
+              fontWeight: "bold",
+              fontSize: "14px",
+            }}
+          >
+            รายชื่อนักศึกษา
+          </Link>
+          <Link
             to="/grade-entry"
             style={{
               textDecoration: "none",
