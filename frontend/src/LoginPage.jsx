@@ -14,7 +14,8 @@ function LoginPage() {
 
   // Sign up state
   const [signupId, setSignupId] = useState("");
-  const [signupName, setSignupName] = useState("");
+  const [signupFirstName, setSignupFirstName] = useState("");
+  const [signupLastName, setSignupLastName] = useState("");
   const [signupSection, setSignupSection] = useState("SEC-A");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirm, setSignupConfirm] = useState("");
@@ -69,7 +70,7 @@ function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           student_id: signupId,
-          name: signupName,
+          name: (signupFirstName + " " + signupLastName).trim(),
           section: signupSection,
           password: signupPassword,
         }),
@@ -184,16 +185,29 @@ function LoginPage() {
                 required
               />
             </div>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>ชื่อ-นามสกุล</label>
-              <input
-                type="text"
-                value={signupName}
-                onChange={(e) => setSignupName(e.target.value)}
-                placeholder="ชื่อ นามสกุล"
-                style={inputStyle}
-                required
-              />
+            <div style={{ display: "flex", gap: "10px", marginBottom: "14px" }}>
+              <div style={{ flex: 1 }}>
+                <label style={labelStyle}>ชื่อ</label>
+                <input
+                  type="text"
+                  value={signupFirstName}
+                  onChange={(e) => setSignupFirstName(e.target.value)}
+                  placeholder="ชื่อ"
+                  style={inputStyle}
+                  required
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={labelStyle}>นามสกุล</label>
+                <input
+                  type="text"
+                  value={signupLastName}
+                  onChange={(e) => setSignupLastName(e.target.value)}
+                  placeholder="นามสกุล"
+                  style={inputStyle}
+                  required
+                />
+              </div>
             </div>
             <div style={fieldStyle}>
               <label style={labelStyle}>Section</label>
