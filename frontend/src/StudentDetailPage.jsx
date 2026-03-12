@@ -151,15 +151,23 @@ function StudentDetailPage() {
         </div>
 
         <div style={topBarRightStyle}>
-          <Link to="/" style={linkButtonStyle}>
-            Dashboard
-          </Link>
-          <Link to="/planner" style={linkButtonStyle}>
-            Grade Planner
-          </Link>
-          <Link to="/my-courses" style={linkButtonStyle}>
-            Course Analyzer
-          </Link>
+          {isAdminUser ? (
+            <Link to="/admin" style={linkButtonStyle}>
+              ← Admin Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link to="/" style={linkButtonStyle}>
+                Dashboard
+              </Link>
+              <Link to="/planner" style={linkButtonStyle}>
+                Grade Planner
+              </Link>
+              <Link to="/my-courses" style={linkButtonStyle}>
+                Course Analyzer
+              </Link>
+            </>
+          )}
         </div>
       </div>
 
