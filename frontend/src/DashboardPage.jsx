@@ -254,36 +254,38 @@ function DashboardPage() {
         </div>
 
         <div style={topBarRightStyle}>
-          <Link to={`/student/${safeStudent.student_id || user.student_id || ""}`} style={linkButtonStyle}>
-            Open My Detail
-          </Link>
-          <Link to="/my-courses" style={linkButtonStyle}>
-            Course Analyzer
-          </Link>
-          <Link to="/planner" style={linkButtonStyle}>
-            AI Grade Planner
-          </Link>
-          <Link to="/leaderboard" style={linkButtonStyle}>
-            Section Insight
-          </Link>
-          {isAdminUser && (
-          <Link to="/admin" style={linkButtonStyle}>
-            Admin Dashboard
-          </Link>
+          {!isAdminUser && (
+            <>
+              <Link to={`/student/${safeStudent.student_id || user.student_id || ""}`} style={linkButtonStyle}>
+                Open My Detail
+              </Link>
+              <Link to="/my-courses" style={linkButtonStyle}>
+                Course Analyzer
+              </Link>
+              <Link to="/planner" style={linkButtonStyle}>
+                AI Grade Planner
+              </Link>
+              <Link to="/leaderboard" style={linkButtonStyle}>
+                Section Insight
+              </Link>
+              <button onClick={handleExportReport} style={{
+                padding: "10px 16px",
+                border: "none",
+                borderRadius: "10px",
+                backgroundColor: "#16a34a",
+                color: "white",
+                fontWeight: "bold",
+                cursor: "pointer"
+              }}>
+                Export Academic Report
+              </button>
+            </>
           )}
-
-         <button onClick={handleExportReport} style={{
-            padding: "10px 16px",
-            border: "none",
-            borderRadius: "10px",
-            backgroundColor: "#16a34a",
-            color: "white",
-            fontWeight: "bold",
-            cursor: "pointer"
-          }}>
-            Export Academic Report
-          </button>
-
+          {isAdminUser && (
+            <Link to="/admin" style={linkButtonStyle}>
+              Admin Dashboard
+            </Link>
+          )}
           <button onClick={handleLogout} style={logoutButtonStyle}>
             Logout
           </button>
