@@ -7,6 +7,7 @@ from analytics import (
     get_ai_risk_prediction,
 )
 from pdf_report import generate_student_report
+import db as _db
 import os
 import pandas as pd
 import secrets
@@ -35,15 +36,7 @@ ADMIN_ROLES = {"admin", "instructor"}
 
 
 def load_users():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    users_path = os.path.join(base_dir, "data", "users.csv")
-    df = pd.read_csv(users_path, dtype=str)
-    df["student_id"] = df["student_id"].str.strip()
-    df["password"] = df["password"].str.strip()
-    df["role"] = df["role"].fillna("").str.strip().str.lower()
-    df["section"] = df["section"].fillna("").str.strip()
-    df["name"] = df["name"].fillna("").str.strip()
-    return df
+    return _db.load_users_df()
 
 
 def get_current_user():
@@ -245,29 +238,31 @@ def register():
     if not users[users["student_id"] == student_id].empty:
         return jsonify({"error": "รหัสนักศึกษานี้ถูกลงทะเบียนแล้ว"}), 409
 
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    users_path = os.path.join(base_dir, "data", "users.csv")
-    students_path = os.path.join(base_dir, "data", "students.csv")
+    used_db = _db.register_user(student_id, name, password, section)
 
-    # อ่านไฟล์เพื่อเช็คว่าบรรทัดสุดท้ายลงท้ายด้วย newline หรือไม่
-    with open(users_path, "rb") as f:
-        f.seek(0, 2)
-        ends_with_newline = f.read(1) == b"\n" if f.tell() > 0 else True
-    with open(users_path, "a", encoding="utf-8", newline="") as f:
-        if not ends_with_newline:
-            f.write("\n")
-        f.write(f"{student_id},{name},{password},{section},student\n")
+    if not used_db:
+        # CSV fallback (local dev without DATABASE_URL)
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        users_path = os.path.join(base_dir, "data", "users.csv")
+        students_path = os.path.join(base_dir, "data", "students.csv")
 
-    # เพิ่มในไฟล์ students.csv ด้วย เพื่อให้ analytics หาเจอ
-    students_df = pd.read_csv(students_path, dtype=str)
-    if students_df[students_df["student_id"] == student_id].empty:
-        with open(students_path, "rb") as f:
+        with open(users_path, "rb") as f:
             f.seek(0, 2)
             ends_with_newline = f.read(1) == b"\n" if f.tell() > 0 else True
-        with open(students_path, "a", encoding="utf-8", newline="") as f:
+        with open(users_path, "a", encoding="utf-8", newline="") as f:
             if not ends_with_newline:
                 f.write("\n")
-            f.write(f"{student_id},{name},{section}\n")
+            f.write(f"{student_id},{name},{password},{section},student\n")
+
+        students_df = pd.read_csv(students_path, dtype=str)
+        if students_df[students_df["student_id"] == student_id].empty:
+            with open(students_path, "rb") as f:
+                f.seek(0, 2)
+                ends_with_newline = f.read(1) == b"\n" if f.tell() > 0 else True
+            with open(students_path, "a", encoding="utf-8", newline="") as f:
+                if not ends_with_newline:
+                    f.write("\n")
+                f.write(f"{student_id},{name},{section}\n")
 
     token = secrets.token_hex(16)
     TOKENS[token] = student_id
@@ -584,11 +579,7 @@ def list_courses():
     if not is_admin_user(user):
         return jsonify({"error": "Forbidden"}), 403
 
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    courses_path = os.path.join(base_dir, "data", "courses.csv")
-    df = pd.read_csv(courses_path, dtype=str).fillna("")
-    courses = df.to_dict(orient="records")
-    return jsonify({"courses": courses})
+    return jsonify({"courses": _db.get_courses_list()})
 
 
 @app.route("/students-list")
@@ -599,11 +590,7 @@ def students_list():
     if not is_admin_user(user):
         return jsonify({"error": "Forbidden"}), 403
 
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    students_path = os.path.join(base_dir, "data", "students.csv")
-    df = pd.read_csv(students_path, dtype=str).fillna("")
-    students = df.to_dict(orient="records")
-    return jsonify({"students": students})
+    return jsonify({"students": _db.get_students_list()})
 
 
 @app.route("/grades", methods=["POST"])
@@ -627,28 +614,29 @@ def save_grade():
         return jsonify({"error": f"เกรดไม่ถูกต้อง ต้องเป็นหนึ่งใน: {', '.join(GRADE_MAP.keys())}"}), 400
 
     grade_point = GRADE_MAP[grade_letter]
+    used_db = _db.upsert_enrollment(student_id, semester, course_code, grade_letter, grade_point)
 
+    if used_db:
+        return jsonify({"message": "บันทึกเกรดสำเร็จ", "updated": True})
+
+    # CSV fallback
     base_dir = os.path.dirname(os.path.abspath(__file__))
     enrollments_path = os.path.join(base_dir, "data", "enrollments.csv")
     df = pd.read_csv(enrollments_path, dtype=str)
     df["student_id"] = df["student_id"].str.strip()
     df["semester"] = df["semester"].str.strip()
     df["course_code"] = df["course_code"].str.strip()
-
     mask = (
         (df["student_id"] == student_id) &
         (df["semester"] == semester) &
         (df["course_code"] == course_code)
     )
-
     if mask.any():
-        # อัปเดตเกรดที่มีอยู่
         df.loc[mask, "grade_letter"] = grade_letter
         df.loc[mask, "grade_point"] = str(grade_point)
         df.to_csv(enrollments_path, index=False)
         return jsonify({"message": "อัปเดตเกรดสำเร็จ", "updated": True})
     else:
-        # เพิ่มแถวใหม่
         with open(enrollments_path, "rb") as f:
             f.seek(0, 2)
             ends_with_newline = f.read(1) == b"\n" if f.tell() > 0 else True

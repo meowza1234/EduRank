@@ -14,12 +14,17 @@ def get_data_paths():
 
 
 def load_core_data():
-    paths = get_data_paths()
+    # Try PostgreSQL first
+    import db as _db
+    students, courses, enrollments = _db.load_core_data_from_db()
+    if students is not None:
+        return students, courses, enrollments
 
+    # CSV fallback (local dev)
+    paths = get_data_paths()
     students = pd.read_csv(paths["students"])
     courses = pd.read_csv(paths["courses"])
     enrollments = pd.read_csv(paths["enrollments"])
-
     return students, courses, enrollments
 
 
